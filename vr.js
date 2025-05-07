@@ -17,6 +17,7 @@ const geometry = new THREE.BoxGeometry( 1, 1, 1 );
 const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 const cube = new THREE.Mesh( geometry, material );
 scene.add( cube );
+cube.position.z = -5;
 
 camera.position.z = 5;
 
@@ -27,6 +28,7 @@ const geometry1 = new THREE.SphereGeometry( 1, 32, 16 );  //cambiamos  el 15 por
 const material1 = new THREE.MeshBasicMaterial({map: buildingTexture1});
 const tierra = new THREE.Mesh( geometry1, material1);
 scene.add( tierra );  
+tierra.position.z = -5;
 
 
 var t=0;
@@ -40,6 +42,7 @@ const geometry2 = new THREE.SphereGeometry( 2, 32, 16 );
 const material2 = new THREE.MeshBasicMaterial( { map:buildingTexture2 } );
 const sol = new THREE.Mesh( geometry2, material2 );
 scene.add( sol );  //añades la esfera a la escena
+sol.position.z = -5;
 
 
 // Cargar la textura 
@@ -49,7 +52,7 @@ const geometry3 = new THREE.SphereGeometry( 0.5, 32, 16 );
 const material3 = new THREE.MeshBasicMaterial( {map:buildingTexture3} );
 const luna = new THREE.Mesh( geometry3, material3 );
 scene.add( luna );  
-
+luna.position.z = -5;
 
 
 function animate() {
