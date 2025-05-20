@@ -49,10 +49,6 @@ loader.load('source/e30.glb', gltf => {
 
 
 
-    // Render loop
-    function animate() {
-      renderer.render(scene, camera);
-    }
 
 
 function animate() {
