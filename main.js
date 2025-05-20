@@ -7,7 +7,9 @@ import { VRButton } from 'three/addons/webxr/VRButton.js';
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.001, 1000);
     
-
+    let despX = -0.34;
+    let despY = -1.135;
+    let despZ = 0.21
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
@@ -29,19 +31,21 @@ document.body.appendChild( VRButton.createButton( renderer ) );;
     const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} ); 
     const cube = new THREE.Mesh( geometry, material ); 
     scene.add( cube );
-    cube.position.x=0.2747;
-    cube.position.y=1.102;
+    cube.position.x=despX;
+    cube.position.y=despY;
     cube.position.z=10;
     camera.lookAt(cube.position)
 
 
-        camera.position.set(0.34, 1.135, -0.21);
+   
+
 
 // Load e30.glb
 let e30Model;
 loader.load('source/e30.glb', gltf => {
   e30Model = gltf.scene;
   scene.add(e30Model);
+  e30Model.position.set(despX,despY,despZ)
 });
 
 // Load helmet.glb
@@ -54,4 +58,3 @@ loader.load('source/e30.glb', gltf => {
 function animate() {
   renderer.render(scene, camera);
 }
-
