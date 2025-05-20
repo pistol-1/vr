@@ -15,7 +15,7 @@ renderer.setAnimationLoop( animate );
 document.body.appendChild( renderer.domElement );
 
 renderer.xr.enabled = true;
-renderer.xr.setReferenceSpaceType( 'local' );
+//renderer.xr.setReferenceSpaceType( 'local' );
 document.body.appendChild( VRButton.createButton( renderer ) );;
 
     const light = new THREE.DirectionalLight(0xffffff, 1);
