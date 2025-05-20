@@ -45,17 +45,6 @@ loader.load('source/e30.glb', gltf => {
 });
 
 // Load helmet.glb
-let helmetModel;
-loader.load('source/helmet.glb', gltf => {
-  helmetModel = gltf.scene;
-  
-  // Move helmet to a new position
-  helmetModel.position.set(0.34, 1.102, -0.275);
-
-  scene.add(helmetModel);
-});
-
-
 
 
 
