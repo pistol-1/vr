@@ -72,7 +72,7 @@ spriteLoader.load('sprays/911.png', texture => {
 
   // Optional: scale and position
   sprite.scale.set(1.66,1.66,1.66);     // size in world units
-  sprite.position.set(despX, 0, 15); // position in 3D space
+  sprite.position.set(-0.5, 0, 15); // position in 3D space
 
   scene.add(sprite);
 });
