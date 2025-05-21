@@ -4,7 +4,7 @@ import { VRButton } from 'three/addons/webxr/VRButton.js';
 
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.001, 1000);
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 1000);
     
 let despX = -0.34;
 let despY = -1.135;
@@ -47,7 +47,7 @@ scene.background = reflectionCube;
    
 
 
-// Load e30.glb
+
 let e30Model;
 loader.load('source/e30.glb', gltf => {
   e30Model = gltf.scene;
@@ -55,10 +55,12 @@ loader.load('source/e30.glb', gltf => {
   e30Model.position.set(despX,despY,despZ)
 });
 
-// Load helmet.glb
-
-
-
+let road;
+loader.load('source/road.glb', gltf => {
+  road = gltf.scene;
+  scene.add(road);
+  road.position.set(despX,despY,despZ)
+});
 
 
 
