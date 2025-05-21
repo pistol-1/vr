@@ -71,7 +71,7 @@ spriteLoader.load('sprays/911.png', texture => {
   const sprite = new THREE.Sprite(material);
 
   // Optional: scale and position
-  sprite.scale.set(3,3,3);     // size in world units
+  sprite.scale.set(1.66,1.66,1.66);     // size in world units
   sprite.position.set(-0.7, 0, 15); // position in 3D space
 
   scene.add(sprite);
