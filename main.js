@@ -5,6 +5,8 @@ import { VRButton } from 'three/addons/webxr/VRButton.js';
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 1000);
+
+const spriteLoader = new THREE.TextureLoader();
     
 let despX = -0.34;
 let despY = -1.135;
@@ -64,6 +66,16 @@ loader.load('source/road.glb', gltf => {
   road.position.set(despX,despY,despZ)
 });
 
+spriteLoader.load('sprays/911.png', texture => {
+  const material = new THREE.SpriteMaterial({ map: texture });
+  const sprite = new THREE.Sprite(material);
+
+  // Optional: scale and position
+  sprite.scale.set(3,3,3);     // size in world units
+  sprite.position.set(-0.7, 0, 15); // position in 3D space
+
+  scene.add(sprite);
+});
 
 
 function animate() {
