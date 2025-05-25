@@ -4,7 +4,7 @@ import { VRButton } from 'three/addons/webxr/VRButton.js';
 
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.001, 1000);
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 100);
 
 const spriteLoader = new THREE.TextureLoader();
     
@@ -24,7 +24,7 @@ document.body.appendChild( VRButton.createButton( renderer ) );;
 const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(5, 10, 7);
 scene.add(light);
-scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+scene.add(new THREE.AmbientLight(0x3d3d3d));
 
 const loader = new GLTFLoader();
 
@@ -48,6 +48,7 @@ const urls = [
 
 const reflectionCube = new THREE.CubeTextureLoader().load( urls );
 scene.background = reflectionCube;
+
    
 
 
@@ -59,25 +60,135 @@ loader.load('source/e30.glb', gltf => {
   e30Model.position.set(despX,despY,despZ)
 });
 
-let road;
-loader.load('source/road.glb', gltf => {
-  road = gltf.scene;
-  scene.add(road);
-  road.position.set(despX,despY,despZ)
-});
+let roads = [];
+for (let i = 0; i < 3; i++) {
+  loader.load('source/road.glb', gltf => {
+    const r = gltf.scene;
+    r.position.set(despX, despY, despZ + i * 110); // Spaced 30 units apart
+    scene.add(r);
+    roads.push(r);
+  });
+}
 
-spriteLoader.load('sprays/911.png', texture => {
+
+spriteLoader.load('sprite/911.png', texture => {
   const material = new THREE.SpriteMaterial({ map: texture });
   const sprite = new THREE.Sprite(material);
 
-  // Optional: scale and position
+  // Optional: scale and position 
   sprite.scale.set(1.66,1.66,1.66);     // size in world units
-  sprite.position.set(-0.5, 0, 15); // position in 3D space
+  sprite.position.set(1.5, -.2, 15); // position in 3D space
 
   scene.add(sprite);
 });
 
+class TrafficCar {
+  constructor(scene,pos, path ) {
+    this.scene = scene;
+    this.sprites = [];
+    spriteLoader.load(path, texture => {
+      const material = new THREE.SpriteMaterial({ map: texture });
+      const sprite = new THREE.Sprite(material);
+
+      // Optional: scale and position
+      sprite.scale.set(1.66,1.66,1.66);     // size in world units
+      sprite.position.set(pos, -.2, 25); // position in 3D space
+
+      scene.add(sprite);
+    });
+  }
+}
+
+class TrafficSign {
+  constructor(scene,pos, path ) {
+    this.scene = scene;
+    this.sprites = [];
+    spriteLoader.load(path, texture => {
+      const material = new THREE.SpriteMaterial({ map: texture });
+      const sprite = new THREE.Sprite(material);
+
+      // Optional: scale and position
+      sprite.scale.set(3,3,3);     // size in world units
+      sprite.position.set(pos, -1, 10); // position in 3D space
+
+      scene.add(sprite);
+    });
+  }
+}
+
+
+
+const spriteCars = [
+  'sprite/911.png',
+  'sprite/bmw.png',
+  'sprite/bus.png',
+  'sprite/corolla.png',
+  'sprite/lambo.png',
+  'sprite/lexus.png',
+  'sprite/police.png',
+  'sprite/tata.png',
+  'sprite/taxi.png'
+];
+
+const spriteSigns = [
+  'sprite/exit.png',
+  'sprite/info1.png',
+  'sprite/info2.png',
+  'sprite/info3.png',
+  'sprite/limit1.png',
+  'sprite/limit2.png',
+  'sprite/policestreetsignt1.png',
+  'sprite/streetsign2.png'
+];
+
+function spawnTraffic (){
+  let t = 0.1;
+
+  let spawnX = [-2.5, -0.5, 1.5][Math.floor(Math.random() * 3)];
+  
+  const traffic = new TrafficCar(scene,spawnX,spriteCars[Math.floor(Math.random()*9)]);
+
+}
+
+spawnTraffic()
+
+const sign = new TrafficSign(scene,-3,spriteSigns[3]);
+
+
+// var carro1 = new TrafficCar (scene)
+// carro1.loadSprites(spriteFilesCars,0)
+
+
+// const spriteFilesSigns = [
+//   'exit.png',
+//   'info1.png',
+//   'info2.png',
+//   'info3.png',
+//   'limit1.png',
+//   'limit2.png',
+//   'limit3.png',
+//   'streetsign1.png',
+//   'streetsign2.png',
+//   'streetsign3.png'
+// ];
+
+// traffic.loadSigns('sprites', spriteFilesCars);
+
+
+var vel = -0.1;
+
 
 function animate() {
+   roads.forEach(road => {
+    road.position.z += vel;
+
+    if (road.position.z < -110) {
+      // Find the furthest forward road
+      let maxZ = Math.max(...roads.map(r => r.position.z));
+      road.position.z = maxZ + 110;
+    }
+  });
+
+
   renderer.render(scene, camera);
 }
