@@ -80,6 +80,7 @@ spriteLoader.load('sprite/911.png', texture => {
   sprite.position.set(1.5, -.2, 15); // position in 3D space
 
   scene.add(sprite);
+  sprite.rotation.y=0
 });
 
 class TrafficCar {
