@@ -143,7 +143,7 @@ const spriteSigns = [
 ];
 
 function spawnTraffic (){
-  let t = 0.1;
+  let t = 0.3;
 
   let spawnX = [Math.floor(Math.random() * 3)];
   
