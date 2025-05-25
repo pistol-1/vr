@@ -83,7 +83,7 @@ class TrafficCar {
       const material = new THREE.SpriteMaterial({ map: texture });
       const sprite = new THREE.Sprite(material);
       sprite.scale.set(2.5,2.5,2.5);
-      sprite.position.set(posX, -0.1, 100); // Spawn at z = 100
+      sprite.position.set(posX, 0, 100); // Spawn at z = 100
 
       // Lock rotation
       sprite.matrixAutoUpdate = false;
@@ -163,7 +163,7 @@ const spriteSigns = [
 
 function spawnTraffic() {
   if (Math.random() < 0.4) {
-    const spawnX = Math.random() < 0.5 ? -0.2 : 2;
+    const spawnX = Math.random() < 0.5 ? -0.25 : 2.3;
     const spritePath = spriteCars[Math.floor(Math.random() * spriteCars.length)];
     const traffic = new TrafficCar(scene, spawnX, spritePath);
     trafficCars.push(traffic);
