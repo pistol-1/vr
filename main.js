@@ -73,14 +73,14 @@ for (let i = 0; i < 3; i++) {
 
 spriteLoader.load('sprite/911.png', texture => {
   const material = new THREE.SpriteMaterial({ map: texture });
-  const sprite = new THREE.Sprite(material);
+  const sprite1 = new THREE.Sprite(material);
 
   // Optional: scale and position 
-  sprite.scale.set(1.66,1.66,1.66);     // size in world units
-  sprite.position.set(2, -.2, 10); // position in 3D space
+  sprite1.scale.set(1.66,1.66,1.66);     // size in world units
+  sprite1.position.set(2, -.2, 10); // position in 3D space
 
-  scene.add(sprite);
-  sprite.rotation.y=0
+  scene.add(sprite1);
+  sprite1.rotation.y=0
 });
 
 class TrafficCar {
