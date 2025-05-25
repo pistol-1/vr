@@ -50,6 +50,9 @@ const reflectionCube = new THREE.CubeTextureLoader().load( urls );
 scene.background = reflectionCube;
 
    
+const trafficSigns = [];
+const trafficCars = [];
+let roads = [];
 
 
 
@@ -58,9 +61,10 @@ loader.load('source/e30.glb', gltf => {
   e30Model = gltf.scene;
   scene.add(e30Model);
   e30Model.position.set(despX,despY,despZ)
+
 });
 
-let roads = [];
+
 for (let i = 0; i < 3; i++) {
   loader.load('source/road.glb', gltf => {
     const r = gltf.scene;
@@ -71,53 +75,33 @@ for (let i = 0; i < 3; i++) {
 }
 
 
-spriteLoader.load('sprite/911.png', texture => {
-  const material = new THREE.SpriteMaterial({ map: texture });
-  const sprite1 = new THREE.Sprite(material);
-
-  // Optional: scale and position 
-  sprite1.scale.set(1.66,1.66,1.66);     // size in world units
-  sprite1.position.set(2, -.2, 10); // position in 3D space
-
-  scene.add(sprite1);
-  sprite1.rotation.y=0
-});
-
 class TrafficCar {
-  constructor(scene,pos, path ) {
+  constructor(scene, posX, path) {
     this.scene = scene;
-    this.sprites = [];
+    this.sprite = null;
     spriteLoader.load(path, texture => {
       const material = new THREE.SpriteMaterial({ map: texture });
       const sprite = new THREE.Sprite(material);
+      sprite.scale.set(2.5,2.5,2.5);
+      sprite.position.set(posX, -0.1, 100); // Spawn at z = 100
 
-      // Optional: scale and position
-      sprite.scale.set(1.66,1.66,1.66);     // size in world units
-      sprite.position.set(pos, -.2, 25); // position in 3D space
-
-      scene.add(sprite);
-    });
-  }
-}
-
-class TrafficSign {
-  constructor(scene,pos, path ) {
-    this.scene = scene;
-    this.sprites = [];
-    spriteLoader.load(path, texture => {
-      const material = new THREE.SpriteMaterial({ map: texture });
-      const sprite = new THREE.Sprite(material);
-
-      // Optional: scale and position
-      sprite.scale.set(3,3,3);     // size in world units
-      sprite.position.set(pos, -1, 10); // position in 3D space
+      // Lock rotation
+      sprite.matrixAutoUpdate = false;
+      sprite.rotation.set(0, 0, 0);
+      sprite.updateMatrix();
 
       scene.add(sprite);
+      this.sprite = sprite;
     });
   }
+
+  moveZ(dz) {
+    if (this.sprite) {
+      this.sprite.position.z += dz;
+      this.sprite.updateMatrix();
+    }
+  }
 }
-
-
 
 const spriteCars = [
   'sprite/911.png',
@@ -131,8 +115,43 @@ const spriteCars = [
   'sprite/taxi.png'
 ];
 
+
+class TrafficSign {
+  constructor(scene, x, z, path) {
+    this.scene = scene;
+    this.sprite = null;
+    spriteLoader.load(path, texture => {
+      const material = new THREE.SpriteMaterial({ map: texture });
+      const sprite = new THREE.Sprite(material);
+      sprite.scale.set(3, 3, 3);
+      sprite.position.set(x, -1, z);
+
+      // Lock sprite rotation
+      sprite.matrixAutoUpdate = false;
+      sprite.rotation.set(0, 0, 0);
+      sprite.updateMatrix();
+
+      scene.add(sprite);
+      this.sprite = sprite;
+    });
+  }
+
+  moveZ(dz) {
+    if (this.sprite) {
+      this.sprite.position.z += dz;
+      this.sprite.updateMatrix(); // Keep matrix in sync with position
+    }
+  }
+}
+
+function spawnTrafficSigns(zOffset) {
+  const x = Math.random() < 0.5 ? -3.3 : 6.3;
+  const spritePath = spriteSigns[Math.floor(Math.random() * spriteSigns.length)];
+  const sign = new TrafficSign(scene, x, zOffset, spritePath);
+  trafficSigns.push(sign);
+}
+
 const spriteSigns = [
-  'sprite/exit.png',
   'sprite/info1.png',
   'sprite/info2.png',
   'sprite/info3.png',
@@ -142,18 +161,19 @@ const spriteSigns = [
   'sprite/streetsign2.png'
 ];
 
-function spawnTraffic (){
-  let t = 0.1;
-
-  let spawnX = [Math.floor(Math.random() * 3)];
-  
-  const traffic = new TrafficCar(scene,spawnX,spriteCars[Math.floor(Math.random()*9)]);
-
+function spawnTraffic() {
+  if (Math.random() < 0.4) {
+    const spawnX = Math.random() < 0.5 ? -0.2 : 2;
+    const spritePath = spriteCars[Math.floor(Math.random() * spriteCars.length)];
+    const traffic = new TrafficCar(scene, spawnX, spritePath);
+    trafficCars.push(traffic);
+  }
 }
+
 
 spawnTraffic()
 
-const sign = new TrafficSign(scene,-3,spriteSigns[3]);
+
 
 
 // var carro1 = new TrafficCar (scene)
@@ -180,16 +200,22 @@ var vel = -0.3;
 
 
 function animate() {
-   roads.forEach(road => {
+  roads.forEach(road => {
     road.position.z += vel;
 
     if (road.position.z < -109.9) {
-      // Find the furthest forward road
       let maxZ = Math.max(...roads.map(r => r.position.z));
       road.position.z = maxZ + 109.9;
+
+      spawnTrafficSigns(road.position.z);
+      spawnTraffic(); // Call this here if you want cars tied to road looping
     }
   });
 
+  trafficSigns.forEach(sign => sign.moveZ(vel));
+
+  // Move cars at half speed
+  trafficCars.forEach(car => car.moveZ(vel * 0.5));
 
   renderer.render(scene, camera);
 }
