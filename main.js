@@ -64,7 +64,7 @@ let roads = [];
 for (let i = 0; i < 3; i++) {
   loader.load('source/road.glb', gltf => {
     const r = gltf.scene;
-    r.position.set(despX, despY, despZ + i * 110); // Spaced 30 units apart
+    r.position.set(despX, despY, despZ + i * 109.9); // Spaced 30 units apart
     scene.add(r);
     roads.push(r);
   });
@@ -183,10 +183,10 @@ function animate() {
    roads.forEach(road => {
     road.position.z += vel;
 
-    if (road.position.z < -110) {
+    if (road.position.z < -109.9) {
       // Find the furthest forward road
       let maxZ = Math.max(...roads.map(r => r.position.z));
-      road.position.z = maxZ + 110;
+      road.position.z = maxZ + 109.9;
     }
   });
 
