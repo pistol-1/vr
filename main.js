@@ -77,7 +77,7 @@ spriteLoader.load('sprite/911.png', texture => {
 
   // Optional: scale and position 
   sprite.scale.set(1.66,1.66,1.66);     // size in world units
-  sprite.position.set(1.5, -.2, 15); // position in 3D space
+  sprite.position.set(3, -.2, 15); // position in 3D space
 
   scene.add(sprite);
   sprite.rotation.y=0
