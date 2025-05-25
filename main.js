@@ -143,7 +143,7 @@ const spriteSigns = [
 ];
 
 function spawnTraffic (){
-  let t = 0.3;
+  let t = 0.1;
 
   let spawnX = [Math.floor(Math.random() * 3)];
   
@@ -176,7 +176,7 @@ const sign = new TrafficSign(scene,-3,spriteSigns[3]);
 // traffic.loadSigns('sprites', spriteFilesCars);
 
 
-var vel = -0.1;
+var vel = -0.3;
 
 
 function animate() {
