@@ -63,7 +63,13 @@ loader.load('source/e30.glb', gltf => {
   e30Model.position.set(despX,despY,despZ)
 
 });
+let steeringWheel;
+loader.load('source/e30Steering.glb', gltf => {
+  steeringWheel = gltf.scene;
+  scene.add(steeringWheel);
+  steeringWheel.position.set(despX,despY,despZ)
 
+});
 
 for (let i = 0; i < 3; i++) {
   loader.load('source/road.glb', gltf => {
@@ -196,7 +202,7 @@ spawnTraffic()
 // traffic.loadSigns('sprites', spriteFilesCars);
 
 
-var vel = -0.3;
+var vel = -1;
 
 
 function animate() {
