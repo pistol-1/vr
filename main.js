@@ -145,7 +145,7 @@ const spriteSigns = [
 function spawnTraffic (){
   let t = 0.1;
 
-  let spawnX = [Math.floor(Math.random() * 2)];
+  let spawnX = [Math.floor(Math.random() * 3)];
   
   const traffic = new TrafficCar(scene,spawnX,spriteCars[Math.floor(Math.random()*9)]);
 
