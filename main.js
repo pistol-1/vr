@@ -120,6 +120,8 @@ generarAuto();
 let juegoActivo = true;
 let velocidad = -1;
 let objetivoX = 0;
+let carrilActual = 'derecha'; // puede ser 'izquierda' o 'derecha'
+
 const velocidadMovimiento = 0.1;
 const raycaster = new THREE.Raycaster();
 const distanciaColision = 1.5;
@@ -156,18 +158,21 @@ function manejarColision() {
     console.log("¡Colisión detectada! Juego detenido.");
 }
 
-// ✅ Control por teclado (compatible con VRBox Bluetooth en Android)
+// ✅ Click para cambiar de carril
 const posicionesObjetivo = { izquierda: 2.3, derecha: 0 };
 
-document.addEventListener('keydown', e => {
+function alternarCarril() {
     if (!juegoActivo) return;
-    const key = e.key.toLowerCase();
-    if (key === 'arrowleft' || key === 'a') {
+    if (carrilActual === 'derecha') {
         objetivoX = posicionesObjetivo.izquierda;
-    } else if (key === 'arrowright' || key === 'd') {
+        carrilActual = 'izquierda';
+    } else {
         objetivoX = posicionesObjetivo.derecha;
+        carrilActual = 'derecha';
     }
-});
+}
+
+window.addEventListener('click', alternarCarril); // Soporta toques y clics en pantalla
 
 function animar() {
     if (!juegoActivo) return renderizador.render(escena, camara);
