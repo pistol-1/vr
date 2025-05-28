@@ -17,9 +17,9 @@ document.body.appendChild(renderizador.domElement);
 document.body.appendChild(VRButton.createButton(renderizador));
 renderizador.setAnimationLoop(animar);
 
-const luzDireccional = new THREE.DirectionalLight(0xffffff, 1);
-luzDireccional.position.set(5, 10, 7);
-escena.add(luzDireccional, new THREE.AmbientLight(0x3d3d3d));
+const luzDireccional = new THREE.DirectionalLight(0xffffff, .1);
+luzDireccional.position.set(.2,0,0);
+escena.add(luzDireccional, new THREE.AmbientLight(0xffffff));
 
 const rutasCubemap = ['px', 'nx', 'py', 'ny', 'pz', 'nz'].map(dir => `cubemap/${dir}.png`);
 escena.background = new THREE.CubeTextureLoader().load(rutasCubemap);
