@@ -17,7 +17,7 @@ document.body.appendChild(renderizador.domElement);
 document.body.appendChild(VRButton.createButton(renderizador));
 renderizador.setAnimationLoop(animar);
 
-const luzDireccional = new THREE.DirectionalLight(0x8ed4ff, .01);
+const luzDireccional = new THREE.DirectionalLight(0x8ed4ff, 0.1);
 luzDireccional.position.set(.2,0,0);
 escena.add(luzDireccional, new THREE.AmbientLight(0xffe5cb);
 
