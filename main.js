@@ -153,14 +153,39 @@ function manejarColision() {
 
 const posicionesObjetivo = { izquierda: 2.3, derecha: 0 };
 
-document.addEventListener('keydown', e => {
-    if (!juegoActivo) return;
-    if (e.key === 'ArrowLeft') objetivoX = posicionesObjetivo.izquierda;
-    else if (e.key === 'ArrowRight') objetivoX = posicionesObjetivo.derecha;
-});
+// Reemplaza esto: interacción con teclado
+// document.addEventListener('keydown', e => {
+//     if (!juegoActivo) return;
+//     if (e.key === 'ArrowLeft') objetivoX = posicionesObjetivo.izquierda;
+//     else if (e.key === 'ArrowRight') objetivoX = posicionesObjetivo.derecha;
+// });
+
+// 🎮 Función para leer joystick de VR
+function manejarJoystick() {
+    const session = renderizador.xr.getSession();
+    if (!session) return;
+
+    for (const inputSource of session.inputSources) {
+        if (!inputSource.gamepad) continue;
+
+        const axes = inputSource.gamepad.axes;
+        if (!axes || axes.length < 2) continue;
+
+        const xAxis = axes[2] !== undefined ? axes[2] : axes[0]; // Algunos mandos usan el eje 2
+
+        // Ajuste de zona muerta para evitar movimientos no deseados
+        if (xAxis < -0.5) {
+            objetivoX = posicionesObjetivo.izquierda;
+        } else if (xAxis > 0.5) {
+            objetivoX = posicionesObjetivo.derecha;
+        }
+    }
+}
 
 function animar() {
     if (!juegoActivo) return renderizador.render(escena, camara);
+
+    manejarJoystick(); // 🎮 Captura entrada del joystick
 
     contenedor.position.x += (objetivoX - contenedor.position.x) * velocidadMovimiento;
 
