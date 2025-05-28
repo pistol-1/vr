@@ -18,7 +18,7 @@ document.body.appendChild(VRButton.createButton(renderizador));
 renderizador.setAnimationLoop(animar);
 
 const luzDireccional = new THREE.DirectionalLight(0x8ed4ff, 0.1);
-luzDireccional.position.set(.2,0,0);
+luzDireccional.position.set(.2, 0, 0);
 escena.add(luzDireccional, new THREE.AmbientLight(0xf5dcca));
 
 const rutasCubemap = ['px', 'nx', 'py', 'ny', 'pz', 'nz'].map(dir => `cubemap/${dir}.png`);
@@ -62,7 +62,12 @@ for (let i = 0; i < 3; i++) {
 class SpritePlano {
     constructor(escena, texturaRuta, ancho, alto, x, y, z, rotY = 0) {
         cargadorTexturas.load(texturaRuta, textura => {
-            const material = new THREE.MeshBasicMaterial({ map: textura, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide });
+            const material = new THREE.MeshBasicMaterial({
+                map: textura,
+                transparent: true,
+                alphaTest: 0.5,
+                side: THREE.DoubleSide
+            });
             const plano = new THREE.Mesh(new THREE.PlaneGeometry(ancho, alto), material);
             plano.position.set(x, y, z);
             plano.rotation.y = rotY;
@@ -151,12 +156,17 @@ function manejarColision() {
     console.log("¡Colisión detectada! Juego detenido.");
 }
 
+// ✅ Control por teclado (compatible con VRBox Bluetooth en Android)
 const posicionesObjetivo = { izquierda: 2.3, derecha: 0 };
 
 document.addEventListener('keydown', e => {
     if (!juegoActivo) return;
-    if (e.key === 'ArrowLeft') objetivoX = posicionesObjetivo.izquierda;
-    else if (e.key === 'ArrowRight') objetivoX = posicionesObjetivo.derecha;
+    const key = e.key.toLowerCase();
+    if (key === 'arrowleft' || key === 'a') {
+        objetivoX = posicionesObjetivo.izquierda;
+    } else if (key === 'arrowright' || key === 'd') {
+        objetivoX = posicionesObjetivo.derecha;
+    }
 });
 
 function animar() {
@@ -181,4 +191,3 @@ function animar() {
 
     renderizador.render(escena, camara);
 }
-
