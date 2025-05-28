@@ -1,9 +1,7 @@
-// === Importaciones ===
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 
-// === Escena y cámara ===
 const escena = new THREE.Scene();
 const camara = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 500);
 
@@ -11,7 +9,6 @@ const contenedor = new THREE.Group();
 contenedor.add(camara);
 escena.add(contenedor);
 
-// === Renderizador ===
 const renderizador = new THREE.WebGLRenderer({ antialias: true });
 renderizador.setSize(window.innerWidth, window.innerHeight);
 renderizador.xr.enabled = true;
@@ -20,79 +17,57 @@ document.body.appendChild(renderizador.domElement);
 document.body.appendChild(VRButton.createButton(renderizador));
 renderizador.setAnimationLoop(animar);
 
-// === Iluminación ===
 const luzDireccional = new THREE.DirectionalLight(0xffffff, 1);
 luzDireccional.position.set(5, 10, 7);
-escena.add(luzDireccional);
-escena.add(new THREE.AmbientLight(0x3d3d3d));
+escena.add(luzDireccional, new THREE.AmbientLight(0x3d3d3d));
 
-// === Textura de fondo (cubemap) ===
-const rutas = ['px', 'nx', 'py', 'ny', 'pz', 'nz'].map(dir => `cubemap/${dir}.png`);
-const cuboReflejo = new THREE.CubeTextureLoader().load(rutas);
-escena.background = cuboReflejo;
+const rutasCubemap = ['px', 'nx', 'py', 'ny', 'pz', 'nz'].map(dir => `cubemap/${dir}.png`);
+escena.background = new THREE.CubeTextureLoader().load(rutasCubemap);
 
-// === Variables de desplazamiento ===
-let despX = -0.34;
-let despY = -1.135;
-let despZ = 0.21;
+const despX = -0.34, despY = -1.135, despZ = 0.21;
 
-// === Recursos ===
-const cargador = new GLTFLoader();
+const cargadorGLTF = new GLTFLoader();
 const cargadorTexturas = new THREE.TextureLoader();
 
-// === Elemento invisible de referencia ===
 const cubo = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
 cubo.position.set(despX, despY, 20);
 cubo.visible = false;
 escena.add(cubo);
+camara.lookAt(cubo.position);
 
-camara.lookAt(cubo.position); // no modificar
-
-// === Modelos y carreteras ===
 let e30Modelo, volante;
-const carreteras = [];
-const autosTrafico = [];
-const señalesTrafico = [];
+const carreteras = [], autosTrafico = [], señalesTrafico = [];
 
-cargador.load('source/e30.glb', gltf => {
+cargadorGLTF.load('source/e30.glb', gltf => {
     e30Modelo = gltf.scene;
     contenedor.add(e30Modelo);
     e30Modelo.position.set(despX, despY, despZ);
 });
 
-cargador.load('source/e30Steering.glb', gltf => {
+cargadorGLTF.load('source/e30Steering.glb', gltf => {
     volante = gltf.scene;
     contenedor.add(volante);
     volante.position.set(-0.025, -0.31, 0.52);
 });
 
 for (let i = 0; i < 3; i++) {
-    cargador.load('source/road.glb', gltf => {
+    cargadorGLTF.load('source/road.glb', gltf => {
         const carretera = gltf.scene;
-        carretera.position.set(despX, despY, despZ + i * 110); // corregido
+        carretera.position.set(despX, despY, despZ + i * 110);
         escena.add(carretera);
         carreteras.push(carretera);
     });
 }
 
-
-// === Clases ===
-class AutoTrafico {
-    constructor(escena, posX, ruta) {
-        cargadorTexturas.load(ruta, textura => {
-            const auto = new THREE.Mesh(
-                new THREE.PlaneGeometry(2.5, 2.5),
-                new THREE.MeshBasicMaterial({
-                    map: textura,
-                    transparent: true,
-                    alphaTest: 0.5,
-                    side: THREE.DoubleSide
-                })
-            );
-            auto.position.set(posX, 0, 100);
-            auto.rotation.y = Math.PI;
-            escena.add(auto);
-            this.malla = auto;
+class SpritePlano {
+    constructor(escena, texturaRuta, ancho, alto, x, y, z, rotY = 0) {
+        cargadorTexturas.load(texturaRuta, textura => {
+            const material = new THREE.MeshBasicMaterial({ map: textura, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide });
+            const plano = new THREE.Mesh(new THREE.PlaneGeometry(ancho, alto), material);
+            plano.position.set(x, y, z);
+            plano.rotation.y = rotY;
+            escena.add(plano);
+            this.malla = plano;
         });
     }
 
@@ -101,31 +76,18 @@ class AutoTrafico {
     }
 }
 
-class SeñalTrafico {
+class AutoTrafico extends SpritePlano {
+    constructor(escena, x, ruta) {
+        super(escena, ruta, 2.5, 2.5, x, 0, 100, Math.PI);
+    }
+}
+
+class SeñalTrafico extends SpritePlano {
     constructor(escena, x, z, ruta) {
-        cargadorTexturas.load(ruta, textura => {
-            const señal = new THREE.Mesh(
-                new THREE.PlaneGeometry(3, 3),
-                new THREE.MeshBasicMaterial({
-                    map: textura,
-                    transparent: true,
-                    alphaTest: 0.5,
-                    side: THREE.DoubleSide
-                })
-            );
-            señal.position.set(x, -1, z);
-            señal.rotation.y = Math.PI;
-            escena.add(señal);
-            this.malla = señal;
-        });
-    }
-
-    moverZ(dz) {
-        if (this.malla) this.malla.position.z += dz;
+        super(escena, ruta, 3, 3, x, -1, z, Math.PI);
     }
 }
 
-// === Generación de tráfico ===
 const spritesAutos = [
     'sprite/911.png', 'sprite/bmw.png', 'sprite/bus.png', 'sprite/corolla.png',
     'sprite/lambo.png', 'sprite/lexus.png', 'sprite/police.png', 'sprite/tata.png', 'sprite/taxi.png'
@@ -139,28 +101,27 @@ const spritesSeñales = [
 function generarAuto() {
     if (Math.random() < 0.6) {
         const x = Math.random() < 0.5 ? -0.25 : 2.3;
-        const ruta = spritesAutos[Math.floor(Math.random() * spritesAutos.length)];
-        const auto = new AutoTrafico(escena, x, ruta);
-        autosTrafico.push(auto);
+        autosTrafico.push(new AutoTrafico(escena, x, spritesAutos[Math.floor(Math.random() * spritesAutos.length)]));
     }
 }
 
 function generarSeñal(z) {
     const x = Math.random() < 0.5 ? -3.3 : 6.3;
-    const ruta = spritesSeñales[Math.floor(Math.random() * spritesSeñales.length)];
-    const señal = new SeñalTrafico(escena, x, z, ruta);
-    señalesTrafico.push(señal);
+    señalesTrafico.push(new SeñalTrafico(escena, x, z, spritesSeñales[Math.floor(Math.random() * spritesSeñales.length)]));
 }
 
 generarAuto();
 
-// === Control del juego ===
 let juegoActivo = true;
+let velocidad = -1;
+let objetivoX = 0;
+const velocidadMovimiento = 0.1;
 const raycaster = new THREE.Raycaster();
 const distanciaColision = 1.5;
 
 function verificarColisiones() {
     if (!e30Modelo || !juegoActivo) return;
+
     const posCarro = new THREE.Vector3();
     e30Modelo.getWorldPosition(posCarro);
 
@@ -176,11 +137,7 @@ function verificarColisiones() {
         for (const dir of direcciones) {
             raycaster.set(posCarro, dir);
             const colisiones = raycaster.intersectObject(auto.malla);
-
-            if (colisiones.length > 0 && colisiones[0].distance < distanciaColision) {
-                manejarColision();
-                return;
-            }
+            if (colisiones.length && colisiones[0].distance < distanciaColision) return manejarColision();
         }
     }
 }
@@ -194,15 +151,7 @@ function manejarColision() {
     console.log("¡Colisión detectada! Juego detenido.");
 }
 
-// === Movimiento ===
-let velocidad = -1;
-let objetivoX = 0;
-const velocidadMovimiento = 0.1;
-
-const posicionesObjetivo = {
-    izquierda: 2.3,
-    derecha: 0
-};
+const posicionesObjetivo = { izquierda: 2.3, derecha: 0 };
 
 document.addEventListener('keydown', e => {
     if (!juegoActivo) return;
@@ -211,10 +160,7 @@ document.addEventListener('keydown', e => {
 });
 
 function animar() {
-    if (!juegoActivo) {
-        renderizador.render(escena, camara);
-        return;
-    }
+    if (!juegoActivo) return renderizador.render(escena, camara);
 
     contenedor.position.x += (objetivoX - contenedor.position.x) * velocidadMovimiento;
 
@@ -222,14 +168,12 @@ function animar() {
 
     carreteras.forEach(carretera => {
         carretera.position.z += velocidad;
-
         if (carretera.position.z < -130) {
-    const maxZ = Math.max(...carreteras.map(c => c.position.z));
-    carretera.position.z = maxZ + 109; // corregido
-    generarSeñal(carretera.position.z);
-    generarAuto();
-}
-
+            const maxZ = Math.max(...carreteras.map(c => c.position.z));
+            carretera.position.z = maxZ + 109;
+            generarSeñal(carretera.position.z);
+            generarAuto();
+        }
     });
 
     señalesTrafico.forEach(s => s.moverZ(velocidad));
