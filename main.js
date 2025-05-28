@@ -1,227 +1,239 @@
+// === Importaciones ===
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 
-const scene = new THREE.Scene();
+// === Escena y cámara ===
+const escena = new THREE.Scene();
+const camara = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 500);
 
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 100);
+const contenedor = new THREE.Group();
+contenedor.add(camara);
+escena.add(contenedor);
 
-const spriteLoader = new THREE.TextureLoader();
-    
+// === Renderizador ===
+const renderizador = new THREE.WebGLRenderer({ antialias: true });
+renderizador.setSize(window.innerWidth, window.innerHeight);
+renderizador.xr.enabled = true;
+renderizador.xr.setReferenceSpaceType('local');
+document.body.appendChild(renderizador.domElement);
+document.body.appendChild(VRButton.createButton(renderizador));
+renderizador.setAnimationLoop(animar);
+
+// === Iluminación ===
+const luzDireccional = new THREE.DirectionalLight(0xffffff, 1);
+luzDireccional.position.set(5, 10, 7);
+escena.add(luzDireccional);
+escena.add(new THREE.AmbientLight(0x3d3d3d));
+
+// === Textura de fondo (cubemap) ===
+const rutas = ['px', 'nx', 'py', 'ny', 'pz', 'nz'].map(dir => `cubemap/${dir}.png`);
+const cuboReflejo = new THREE.CubeTextureLoader().load(rutas);
+escena.background = cuboReflejo;
+
+// === Variables de desplazamiento ===
 let despX = -0.34;
 let despY = -1.135;
-let despZ = 0.21
+let despZ = 0.21;
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize( window.innerWidth, window.innerHeight );
-renderer.setAnimationLoop( animate );
-document.body.appendChild( renderer.domElement );
+// === Recursos ===
+const cargador = new GLTFLoader();
+const cargadorTexturas = new THREE.TextureLoader();
 
-renderer.xr.enabled = true;
-renderer.xr.setReferenceSpaceType( 'local' );
-document.body.appendChild( VRButton.createButton( renderer ) );;
+// === Elemento invisible de referencia ===
+const cubo = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
+cubo.position.set(despX, despY, 20);
+cubo.visible = false;
+escena.add(cubo);
 
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(5, 10, 7);
-scene.add(light);
-scene.add(new THREE.AmbientLight(0x3d3d3d));
+camara.lookAt(cubo.position); // no modificar
 
-const loader = new GLTFLoader();
+// === Modelos y carreteras ===
+let e30Modelo, volante;
+const carreteras = [];
+const autosTrafico = [];
+const señalesTrafico = [];
 
-const geometry = new THREE.BoxGeometry( 1,1,1 ); 
-const material = new THREE.MeshBasicMaterial( {color: 0x00ff00} ); 
-const cube = new THREE.Mesh( geometry, material ); 
-scene.add( cube );
-cube.position.set(despX,despY,20)
-cube.visible=false;
-
-camera.lookAt(cube.position)
-
-				
-const path = 'cubemap/';
-const format = '.png';
-const urls = [
-	path + 'px' + format, path + 'nx' + format,
-	path + 'py' + format, path + 'ny' + format,
-	path + 'pz' + format, path + 'nz' + format
-  ];
-
-const reflectionCube = new THREE.CubeTextureLoader().load( urls );
-scene.background = reflectionCube;
-
-   
-const trafficSigns = [];
-const trafficCars = [];
-let roads = [];
-
-
-
-let e30Model;
-loader.load('source/e30.glb', gltf => {
-  e30Model = gltf.scene;
-  scene.add(e30Model);
-  e30Model.position.set(despX,despY,despZ)
-
+cargador.load('source/e30.glb', gltf => {
+    e30Modelo = gltf.scene;
+    contenedor.add(e30Modelo);
+    e30Modelo.position.set(despX, despY, despZ);
 });
-let steeringWheel;
-loader.load('source/e30Steering.glb', gltf => {
-  steeringWheel = gltf.scene;
-  scene.add(steeringWheel);
-  steeringWheel.position.set(despX,despY,despZ)
 
+cargador.load('source/e30Steering.glb', gltf => {
+    volante = gltf.scene;
+    contenedor.add(volante);
+    volante.position.set(-0.025, -0.31, 0.52);
 });
 
 for (let i = 0; i < 3; i++) {
-  loader.load('source/road.glb', gltf => {
-    const r = gltf.scene;
-    r.position.set(despX, despY, despZ + i * 109.9); // Spaced 30 units apart
-    scene.add(r);
-    roads.push(r);
-  });
-}
-
-
-class TrafficCar {
-  constructor(scene, posX, path) {
-    this.scene = scene;
-    this.sprite = null;
-    spriteLoader.load(path, texture => {
-      const material = new THREE.SpriteMaterial({ map: texture });
-      const sprite = new THREE.Sprite(material);
-      sprite.scale.set(2.5,2.5,2.5);
-      sprite.position.set(posX, 0, 100); // Spawn at z = 100
-
-      // Lock rotation
-      sprite.matrixAutoUpdate = false;
-      sprite.rotation.set(0, 0, 0);
-      sprite.updateMatrix();
-
-      scene.add(sprite);
-      this.sprite = sprite;
+    cargador.load('source/road.glb', gltf => {
+        const carretera = gltf.scene;
+        carretera.position.set(despX, despY, despZ + i * 110); // corregido
+        escena.add(carretera);
+        carreteras.push(carretera);
     });
-  }
-
-  moveZ(dz) {
-    if (this.sprite) {
-      this.sprite.position.z += dz;
-      this.sprite.updateMatrix();
-    }
-  }
 }
 
-const spriteCars = [
-  'sprite/911.png',
-  'sprite/bmw.png',
-  'sprite/bus.png',
-  'sprite/corolla.png',
-  'sprite/lambo.png',
-  'sprite/lexus.png',
-  'sprite/police.png',
-  'sprite/tata.png',
-  'sprite/taxi.png'
+
+// === Clases ===
+class AutoTrafico {
+    constructor(escena, posX, ruta) {
+        cargadorTexturas.load(ruta, textura => {
+            const auto = new THREE.Mesh(
+                new THREE.PlaneGeometry(2.5, 2.5),
+                new THREE.MeshBasicMaterial({
+                    map: textura,
+                    transparent: true,
+                    alphaTest: 0.5,
+                    side: THREE.DoubleSide
+                })
+            );
+            auto.position.set(posX, 0, 100);
+            auto.rotation.y = Math.PI;
+            escena.add(auto);
+            this.malla = auto;
+        });
+    }
+
+    moverZ(dz) {
+        if (this.malla) this.malla.position.z += dz;
+    }
+}
+
+class SeñalTrafico {
+    constructor(escena, x, z, ruta) {
+        cargadorTexturas.load(ruta, textura => {
+            const señal = new THREE.Mesh(
+                new THREE.PlaneGeometry(3, 3),
+                new THREE.MeshBasicMaterial({
+                    map: textura,
+                    transparent: true,
+                    alphaTest: 0.5,
+                    side: THREE.DoubleSide
+                })
+            );
+            señal.position.set(x, -1, z);
+            señal.rotation.y = Math.PI;
+            escena.add(señal);
+            this.malla = señal;
+        });
+    }
+
+    moverZ(dz) {
+        if (this.malla) this.malla.position.z += dz;
+    }
+}
+
+// === Generación de tráfico ===
+const spritesAutos = [
+    'sprite/911.png', 'sprite/bmw.png', 'sprite/bus.png', 'sprite/corolla.png',
+    'sprite/lambo.png', 'sprite/lexus.png', 'sprite/police.png', 'sprite/tata.png', 'sprite/taxi.png'
 ];
 
-
-class TrafficSign {
-  constructor(scene, x, z, path) {
-    this.scene = scene;
-    this.sprite = null;
-    spriteLoader.load(path, texture => {
-      const material = new THREE.SpriteMaterial({ map: texture });
-      const sprite = new THREE.Sprite(material);
-      sprite.scale.set(3, 3, 3);
-      sprite.position.set(x, -1, z);
-
-      // Lock sprite rotation
-      sprite.matrixAutoUpdate = false;
-      sprite.rotation.set(0, 0, 0);
-      sprite.updateMatrix();
-
-      scene.add(sprite);
-      this.sprite = sprite;
-    });
-  }
-
-  moveZ(dz) {
-    if (this.sprite) {
-      this.sprite.position.z += dz;
-      this.sprite.updateMatrix(); // Keep matrix in sync with position
-    }
-  }
-}
-
-function spawnTrafficSigns(zOffset) {
-  const x = Math.random() < 0.5 ? -3.3 : 6.3;
-  const spritePath = spriteSigns[Math.floor(Math.random() * spriteSigns.length)];
-  const sign = new TrafficSign(scene, x, zOffset, spritePath);
-  trafficSigns.push(sign);
-}
-
-const spriteSigns = [
-  'sprite/info1.png',
-  'sprite/info2.png',
-  'sprite/info3.png',
-  'sprite/limit1.png',
-  'sprite/limit2.png',
-  'sprite/policestreetsignt1.png',
-  'sprite/streetsign2.png'
+const spritesSeñales = [
+    'sprite/info1.png', 'sprite/info2.png', 'sprite/info3.png',
+    'sprite/limit1.png', 'sprite/limit2.png', 'sprite/streetsign1.png', 'sprite/streetsign2.png'
 ];
 
-function spawnTraffic() {
-  if (Math.random() < 0.4) {
-    const spawnX = Math.random() < 0.5 ? -0.25 : 2.3;
-    const spritePath = spriteCars[Math.floor(Math.random() * spriteCars.length)];
-    const traffic = new TrafficCar(scene, spawnX, spritePath);
-    trafficCars.push(traffic);
-  }
+function generarAuto() {
+    if (Math.random() < 0.6) {
+        const x = Math.random() < 0.5 ? -0.25 : 2.3;
+        const ruta = spritesAutos[Math.floor(Math.random() * spritesAutos.length)];
+        const auto = new AutoTrafico(escena, x, ruta);
+        autosTrafico.push(auto);
+    }
 }
 
+function generarSeñal(z) {
+    const x = Math.random() < 0.5 ? -3.3 : 6.3;
+    const ruta = spritesSeñales[Math.floor(Math.random() * spritesSeñales.length)];
+    const señal = new SeñalTrafico(escena, x, z, ruta);
+    señalesTrafico.push(señal);
+}
 
-spawnTraffic()
+generarAuto();
 
+// === Control del juego ===
+let juegoActivo = true;
+const raycaster = new THREE.Raycaster();
+const distanciaColision = 1.5;
 
+function verificarColisiones() {
+    if (!e30Modelo || !juegoActivo) return;
+    const posCarro = new THREE.Vector3();
+    e30Modelo.getWorldPosition(posCarro);
 
+    const direcciones = [
+        new THREE.Vector3(0, 0, -1),
+        new THREE.Vector3(-0.5, 0, -1),
+        new THREE.Vector3(0.5, 0, -1)
+    ];
 
-// var carro1 = new TrafficCar (scene)
-// carro1.loadSprites(spriteFilesCars,0)
+    for (const auto of autosTrafico) {
+        if (!auto.malla || posCarro.distanceTo(auto.malla.position) > 10) continue;
 
+        for (const dir of direcciones) {
+            raycaster.set(posCarro, dir);
+            const colisiones = raycaster.intersectObject(auto.malla);
 
-// const spriteFilesSigns = [
-//   'exit.png',
-//   'info1.png',
-//   'info2.png',
-//   'info3.png',
-//   'limit1.png',
-//   'limit2.png',
-//   'limit3.png',
-//   'streetsign1.png',
-//   'streetsign2.png',
-//   'streetsign3.png'
-// ];
-
-// traffic.loadSigns('sprites', spriteFilesCars);
-
-
-var vel = -1;
-
-
-function animate() {
-  roads.forEach(road => {
-    road.position.z += vel;
-
-    if (road.position.z < -109.9) {
-      let maxZ = Math.max(...roads.map(r => r.position.z));
-      road.position.z = maxZ + 109.9;
-
-      spawnTrafficSigns(road.position.z);
-      spawnTraffic(); // Call this here if you want cars tied to road looping
+            if (colisiones.length > 0 && colisiones[0].distance < distanciaColision) {
+                manejarColision();
+                return;
+            }
+        }
     }
-  });
+}
 
-  trafficSigns.forEach(sign => sign.moveZ(vel));
+function manejarColision() {
+    juegoActivo = false;
+    velocidad = 0;
+    const flash = new THREE.AmbientLight(0xff0000, 1);
+    escena.add(flash);
+    setTimeout(() => escena.remove(flash), 300);
+    console.log("¡Colisión detectada! Juego detenido.");
+}
 
-  // Move cars at half speed
-  trafficCars.forEach(car => car.moveZ(vel * 0.5));
+// === Movimiento ===
+let velocidad = -1;
+let objetivoX = 0;
+const velocidadMovimiento = 0.1;
 
-  renderer.render(scene, camera);
+const posicionesObjetivo = {
+    izquierda: 2.3,
+    derecha: 0
+};
+
+document.addEventListener('keydown', e => {
+    if (!juegoActivo) return;
+    if (e.key === 'ArrowLeft') objetivoX = posicionesObjetivo.izquierda;
+    else if (e.key === 'ArrowRight') objetivoX = posicionesObjetivo.derecha;
+});
+
+function animar() {
+    if (!juegoActivo) {
+        renderizador.render(escena, camara);
+        return;
+    }
+
+    contenedor.position.x += (objetivoX - contenedor.position.x) * velocidadMovimiento;
+
+    verificarColisiones();
+
+    carreteras.forEach(carretera => {
+        carretera.position.z += velocidad;
+
+        if (carretera.position.z < -130) {
+    const maxZ = Math.max(...carreteras.map(c => c.position.z));
+    carretera.position.z = maxZ + 109; // corregido
+    generarSeñal(carretera.position.z);
+    generarAuto();
+}
+
+    });
+
+    señalesTrafico.forEach(s => s.moverZ(velocidad));
+    autosTrafico.forEach(a => a.moverZ(velocidad * 0.2));
+
+    renderizador.render(escena, camara);
 }
